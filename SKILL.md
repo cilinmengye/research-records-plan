@@ -6,11 +6,11 @@ description: >
   acting. Triggers include: "read and implement", "understand then plan",
   "investigate", "research", or any task where acting without prior deep
   reading would risk misunderstanding. This skill enforces a strict
-  Research → Plan → Cleanup workflow to prevent acting on misread material.
+  Research → Plan → Reuse/Cleanup workflow to prevent acting on misread material.
 license: MIT
 ---
 
-# Research → Plan → Cleanup Workflow
+# Research → Plan → Reuse / Cleanup Workflow
 
 This skill enforces a three-phase workflow for any task that requires
 understanding unfamiliar material before acting. **Never skip or merge phases.**
@@ -23,6 +23,17 @@ Read all referenced code, documentation, and materials thoroughly.
 When done, write findings to a temporary file `research.md` in the
 current working directory.
 
+### At the start of every new round
+
+If `research.md` already exists, read it before doing anything else and apply
+this decision before proceeding:
+
+| Condition | Action |
+|-----------|--------|
+| Topic and materials are the same as last round. | **Reuse** as-is. Skip to Phase 2. |
+| Topic is the same but materials have changed or new ones were added. | **Supplement**: append new findings, mark outdated entries `SUPERSEDED:`. |
+| Topic has shifted or `research.md` covers unrelated material. | **Rewrite**: delete and restart Phase 1. |
+
 ### research.md format
 
 This file is written **for AI consumption**, not human reading.
@@ -30,7 +41,7 @@ Its purpose is to serve as a reliable reference during Phase 2,
 preventing semantic drift when the original material is no longer
 in the active context window.
 
-Use the following structure. Every entry must be a **explicit assertion**
+Use the following structure. Every entry must be an **explicit assertion**
 with a boundary condition or counter-example where ambiguity is possible.
 Avoid narrative prose — write declarative statements only.
 
@@ -80,7 +91,7 @@ Then construct the execution plan and cross-check each step against `research.md
 **Persistent documentation decision:**
 
 After drafting the plan, decide whether any findings warrant writing to a
-persistent document (not deleted at cleanup). Apply this decision framework:
+persistent document (not subject to cleanup). Apply this decision framework:
 
 1. Check whether an active skill covers persistent documentation
    (e.g. a note-taking or architecture-record skill). If yes, follow
@@ -96,16 +107,31 @@ persistent document (not deleted at cleanup). Apply this decision framework:
 
 ---
 
-## Phase 3 — Cleanup
+## Phase 3 — Reuse or Cleanup
 
-After the plan is complete and confirmed, delete the temporary file:
+`research.md` is bound to the **task**, not to a single plan. Do not delete it
+after a plan is complete — it must remain available for subsequent rounds of
+the same task.
+
+### Invalidation conditions (when to delete)
+
+Delete `research.md` only when one of these conditions is explicitly met:
+
+1. **User signals task completion** — e.g. "done", "ship it", "let's move on to X".
+2. **Material has changed fundamentally** — a dependency was upgraded, an API
+   replaced, or the codebase being studied is no longer the same version.
+3. **New task is unrelated** — the incoming task has no meaningful overlap with
+   the scope recorded in `research.md`.
+
+When deleting:
 
 ```bash
 rm research.md
 ```
 
-Do not delete `research.md` before the plan is finalised — it must remain
-available for cross-checking until the plan is complete.
+Never delete `research.md` between plan rounds on the same task, even if a plan
+has been confirmed and execution has begun. It remains the ground truth for the
+task until an invalidation condition is explicitly met.
 
 ---
 
@@ -118,7 +144,9 @@ These are the errors this skill is designed to prevent. Recognise them actively.
   defence against this.
 - **Skipping cross-check:** The plan is written from memory rather than by
   consulting research.md. Always re-read before planning.
-- **Premature cleanup:** research.md is deleted before the plan is finished.
-  The file must persist until the plan is confirmed complete.
+- **Premature cleanup:** research.md is deleted after the first plan completes.
+  It must persist until an invalidation condition is met.
+- **Ignoring existing research.md:** A new round begins without checking whether
+  a valid research.md already exists. Always check first.
 - **Over-persisting:** Every finding is written to permanent docs, creating
   noise. Use the three-condition check in Phase 2.
